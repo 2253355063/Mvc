@@ -105,12 +105,12 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                         routeInfo.RouteName,
                         routeInfo.Order);
                 }
-                catch (InvalidRouteException routeException)
+                catch (RouteProcessingException routeProcessingException)
                 {
-                    throw new InvalidRouteException(
+                    throw new RouteProcessingException(
                         "An error occurred while adding a route to the route builder. " +
                         $"Route name '{routeInfo.RouteName}' and template '{routeInfo.RouteTemplate.TemplateText}'.",
-                        routeException);
+                        routeProcessingException);
                 }
             }
 
