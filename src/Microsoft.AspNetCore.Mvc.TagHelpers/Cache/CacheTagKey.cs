@@ -148,13 +148,19 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers.Cache
         {
             var key = GenerateKey();
 
+            HashAlgorithm sha256;
+#if NETSTANDARD1_6
+            sha256 = SHA256.Create();
+#else
+            sha256 = new SHA256Cng();
+#endif
             // The key is typically too long to be useful, so we use a cryptographic hash
             // as the actual key (better randomization and key distribution, so small vary
             // values will generate dramatically different keys).
-            using (var sha = SHA256.Create())
+            using (sha256)
             {
                 var contentBytes = Encoding.UTF8.GetBytes(key);
-                var hashedBytes = sha.ComputeHash(contentBytes);
+                var hashedBytes = sha256.ComputeHash(contentBytes);
                 return Convert.ToBase64String(hashedBytes);
             }
         }
@@ -183,14 +189,14 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers.Cache
                 AreSame(_headers, other._headers) &&
                 AreSame(_queries, other._queries) &&
                 AreSame(_routeValues, other._routeValues) &&
-                _varyByUser == other._varyByUser && 
+                _varyByUser == other._varyByUser &&
                 (!_varyByUser || string.Equals(other._username, _username, StringComparison.Ordinal));
         }
 
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            // The hashcode is intentionally not using the computed 
+            // The hashcode is intentionally not using the computed
             // stringified key in order to prevent string allocations
             // in the common case where it's not explicitly required.
 
@@ -219,7 +225,7 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers.Cache
 
             return _hashcode.Value;
         }
-        
+
         private static IList<KeyValuePair<string, string>> ExtractCollection<TSourceCollection>(string keys, TSourceCollection collection, Func<TSourceCollection, string, string> accessor)
         {
             if (string.IsNullOrEmpty(keys))
@@ -244,7 +250,7 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers.Cache
 
             return result;
         }
-        
+
         private static void AddStringCollection(
             StringBuilder builder,
             string collectionName,
@@ -275,7 +281,7 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers.Cache
                     .Append(CacheKeyTokenSeparator)
                     .Append(item.Value);
             }
-            
+
             builder.Append(")");
         }
 
